@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Video</title>
+</head>
+<body>
+    <h1>Demo Video</h1>
+
+    {% if video_list %}
+        <ul>
+            {% for video in video_list %}
+                <li>
+                    <h3>{{ video.name }}</h3>
+                    <video width="560" height="315" controls>
+                        <source src="{% static video.template_path %}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No demo videos available.</p>
+    {% endif %}
+
+    <p>Watch the demo videos and note the positions where you want the text to appear.</p>
+    <a href="{% url 'user_input' %}">Continue to edit your own</a>
+</body>
+</html>

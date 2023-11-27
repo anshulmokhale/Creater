@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Input</title>
+</head>
+<body>
+    <h1>User Input</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="username">Enter your YouTube username:</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="video_id">Select a video:</label>
+        <select id="video_id" name="video_id">
+            {% for video in video_list %}
+                <option value="{{ video.id }}">{{ video.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Generate Video</button>
+    </form>
+</body>
+</html>
