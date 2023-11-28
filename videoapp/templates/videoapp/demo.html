@@ -15,7 +15,7 @@
                 <li>
                     <h3>{{ video.name }}</h3>
                     <video width="560" height="315" controls>
-                        <source src="{% static video.template_path %}" type="video/mp4">
+                        <source src="{{ video.template_path|safe }}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </li>

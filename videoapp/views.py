@@ -1,24 +1,31 @@
 import tempfile
 from django.shortcuts import render
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip
-from django.templatetags.static import static
 import os
-from io import BytesIO
-from django.conf import settings
 import base64
 from moviepy.config import change_settings
+from django.conf import settings
+import posixpath
 
+'''
+The static template tag will dynamically generate the correct paths
+based on your STATICFILES_DIRS settings. Make sure that your
+STATICFILES_DIRS in your Django settings includes the directory
+where your static files, including videos, are collected using 
+python manage.py collectstatic --noinput. 
+'''
 
 change_settings({"IMAGEMAGICK_BINARY": r"C:\\Program Files\\ImageMagick\\magick.exe"}) 
 
 def index(request):
     return render(request, 'videoapp/index.html')
 
-def generate_video(username, video_template_path, text_position, text_duration,fontsize, font, color, bg_color,):
+def generate_video(username, video_template_path, text_position, text_duration, fontsize, font, color, bg_color):
+
     video = VideoFileClip(video_template_path)
 
     # Create a TextClip with the animated typing effect for the username
-    txt_clip = TextClip(username,fontsize=fontsize, font=font, color=color, bg_color=bg_color).set_duration(video.duration)
+    txt_clip = TextClip(username, fontsize=fontsize, font=font, color=color, bg_color=bg_color).set_duration(video.duration)
 
     # Set the position of the text and duration
     txt_clip = txt_clip.set_position(text_position).set_duration(text_duration[0] - text_duration[1]).set_start(text_duration[1])
@@ -40,10 +47,13 @@ def generate_video(username, video_template_path, text_position, text_duration,f
 
     return video_data_base64
 
+
+# posixpath IS better compared to static django i guess, maybenot lol
+
 def display_demo(request):
     video_list = [
-        {'id': 1, 'name': 'Video 1', 'template_path': 'videoapp/demo/demo.mp4'},
-        {'id': 2, 'name': 'Video 2', 'template_path': 'videoapp/demo/demo2.mp4'},
+        {'id': 1, 'name': 'Video 1', 'template_path': posixpath.join(settings.STATIC_URL, 'videoapp/demo/demo_template.mp4')},
+        {'id': 2, 'name': 'Video 2', 'template_path': posixpath.join(settings.STATIC_URL, 'videoapp/demo/demo2.mp4')},
         # Add more videos as needed
     ]
 
@@ -51,8 +61,8 @@ def display_demo(request):
 
 def user_input(request):
     video_list = [
-        {'id': 1, 'name': 'Video 1', 'template_path': 'videoapp/demo/demo_template.mp4', 'text_position': (230, 483), 'text_duration': (4.55, 0.7),'fontsize':45, 'font':'Arial', 'color':'black', 'bg_color':'#F2F2F2'},
-        {'id': 2, 'name': 'Video 2', 'template_path': 'videoapp/demo/demo2.mp4', 'text_position': (434, 495), 'text_duration': (4.9, 0.4), 'fontsize':120,'font':'Arial', 'color':'black', 'bg_color':'#F2F2F2'},
+        {'id': 1, 'name': 'Video 1', 'template_path': posixpath.join(settings.STATIC_URL, 'videoapp/demo/demo_template.mp4'), 'text_position': (230, 483), 'text_duration': (4.55, 0.7), 'fontsize': 45, 'font': 'Arial', 'color': 'black', 'bg_color': '#F2F2F2'},
+        {'id': 2, 'name': 'Video 2', 'template_path': posixpath.join(settings.STATIC_URL, 'videoapp/demo/demo2.mp4'), 'text_position': (434, 495), 'text_duration': (4.9, 0.4), 'fontsize': 120, 'font': 'Arial', 'color': 'black', 'bg_color': '#F2F2F2'},
         # Add more videos as needed
     ]
 
@@ -63,7 +73,10 @@ def user_input(request):
         selected_video = next((video for video in video_list if video['id'] == video_id), None)
 
         if selected_video:
-            video_template_path = os.path.join(settings.STATIC_ROOT, selected_video['template_path'])
+            #video_template_path = os.path.join(settings.STATIC_ROOT, selected_video['template_path'][1:])
+            #video_template_path = posixpath.join(settings.STATIC_ROOT, selected_video['template_path'][len(settings.STATIC_URL):])
+            video_template_path = os.path.normpath(os.path.join(settings.STATIC_ROOT, selected_video['template_path'][len(settings.STATIC_URL):])) #FINALYYYYYYYYYYYYYYYYY!!!!!!!!!!!
+            #video_template_path = selected_video['template_path'][len(settings.STATIC_URL):].lstrip('/')
             text_position = selected_video['text_position']
             text_duration = selected_video['text_duration']
             fontsize = selected_video['fontsize']
@@ -71,7 +84,7 @@ def user_input(request):
             color = selected_video['color']
             bg_color = selected_video['bg_color']
 
-            video_data_base64 = generate_video(username, video_template_path, text_position, text_duration,fontsize, font, color, bg_color)
+            video_data_base64 = generate_video(username, video_template_path, text_position, text_duration, fontsize, font, color, bg_color)
 
             return render(request, 'videoapp/generated_video.html', {'username': username, 'video_data': video_data_base64, 'video_type': 'video/mp4'})
 
